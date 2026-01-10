@@ -1,0 +1,15 @@
+---
+- name: Uninstall open-iscsi package
+  hosts: all
+  become: true  # This is needed for administrative privileges
+
+  tasks:
+    - name: Ensure open-iscsi is uninstalled
+      ansible.builtin.apt:
+        name: open-iscsi
+        state: absent
+        purge: yes # Optional: removes configuration files as well
+
+    - name: Autoremove unused dependencies
+      ansible.builtin.apt:
+        autoremove: true # This can be used as the only option in a task
