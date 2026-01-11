@@ -1,0 +1,7 @@
+---
+- name: Shut down hosts gracefully
+  hosts: all
+  become: true  # Necessary for permission to shut down the system
+  tasks:
+    - name: Unconditionally shut down the machine
+      community.general.shutdown:
