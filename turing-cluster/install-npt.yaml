@@ -1,0 +1,10 @@
+---
+- name: Configure NTP on Ubuntu hosts
+  hosts: all
+  become: yes # Needed to install packages and manage services
+  tasks:
+    - name: Ensure NTP package is installed
+      ansible.builtin.apt:
+        name: ntp
+        state: present
+        update_cache: yes # Run apt-get update if cache is older than cache_valid_time

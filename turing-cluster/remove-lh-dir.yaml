@@ -1,0 +1,9 @@
+---
+- name: Remove a directory playbook
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure the directory /var/lib/longhorn is absent
+      ansible.builtin.file:
+        path: /var/lib/longhorn
+        state: absent

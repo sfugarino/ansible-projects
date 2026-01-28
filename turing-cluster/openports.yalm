@@ -1,0 +1,23 @@
+---
+- name: Open longhorn firewall ports
+  hosts: all
+  become: true
+  tasks:
+    - name: Open Conversion Webhook port
+      community.general.ufw:
+        rule: allow
+        port: '9501'
+        proto: tcp
+        state: enabled
+    - name: Open Addmision Wewbhook port
+      community.general.ufw:
+        rule: allow
+        port: '9502'
+        proto: tcp
+        state: enabled    
+    - name: Open Recovery Backend port
+      community.general.ufw:
+        rule: allow
+        port: '9503'
+        proto: tcp
+        state: enabled    

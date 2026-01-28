@@ -8,5 +8,4 @@
         state: present
         update_cache: yes
       loop:
-        - open-iscsi        
-        - util-linux
+        - cryptsetup        

@@ -1,0 +1,6 @@
+- name: Reboot hosts gracefully
+  hosts: all
+  become: true  # Necessary for permission to shut down the system
+  tasks:
+    - name: Unconditionally reboot the machine
+      ansible.builtin.reboot:
