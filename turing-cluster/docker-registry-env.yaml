@@ -1,0 +1,14 @@
+---
+- name: Copy profile from local to remote hosts
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copy profile file to remote hosts
+      ansible.builtin.copy:
+        src: ./env/docker-registry.sh
+        dest: /etc/profile.d/docker-registry.sh
+        mode: '777'
+    - name: Run command after sourcing profile (bash)
+      ansible.builtin.shell: source /etc/profile.d/docker-registry.sh
+      args:
+        executable: /bin/bash

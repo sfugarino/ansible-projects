@@ -1,0 +1,16 @@
+---
+- name: Add a specific host entry to /etc/hosts
+  hosts: all
+  become: yes
+  tasks:
+  - name: Add docker-registry to hosts file
+    ansible.builtin.lineinfile:
+      path: /etc/hosts
+      regexp: '10\.43\.253\.154.*'
+      line: '10.43.253.154 turing-registry'
+      state: present
+      create: true
+      owner: root
+      group: root
+      mode: '0644'
+
