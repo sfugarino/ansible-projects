@@ -1,11 +1,53 @@
 ---
 - name: Copy certificate from local to remote hosts
-  hosts: all
+  hosts: pi
   become: yes
+  gather_facts: no
   tasks:
-    - name: Copy certificate file to remote host
-      ansible.builtin.shell: /usr/sbin/update-ca-certificates --fresh
-      when: ansible_os_family == "Debian"
-      args:
-        # Prevents running the command if the file content hasn't changed
-        creates: /etc/ssl/certs/ca-certificates.crt 
+  - name: Update apt cache and install required packages
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: present
+      update_cache: yes
+    loop:
+    - ca-certificates
+    - curl
+    - gnupg
+    - lsb-release
+  - name: Ensure the /etc/docker/certs.d/registry.local directory exists
+    ansible.builtin.file:
+      path: /etc/docker/certs.d/registry.local
+      state: directory
+      owner: sam  # Replace with the desired owner
+      group: sam # Replace with the desired group
+      mode: '0755'
+  - name: Ensure a specific file is deleted
+    ansible.builtin.file:
+      path: /etc/docker/certs.d/registry.local/registry-ca.crt
+      state: absent 
+  - name: Copy certificate to remote hosts
+    ansible.builtin.copy:
+      src: ./certs/registry-ca.crt
+      dest: /etc/docker/certs.d/registry.local/registry-ca.crt
+      mode: '644'
+  - name: Ensure a specific file is deleted
+    ansible.builtin.file:
+      path: /usr/local/share/ca-certificates/registry-ca.crt
+      state: absent 
+  - name: Update CA certificate trust store
+    ansible.builtin.shell: /usr/sbin/update-ca-certificates --fresh
+    args:
+      creates: /etc/ssl/certs/ca-certificates.crt 
+  - name: Copy certificate to remote hosts
+    ansible.builtin.copy:
+      src: ./certs/registry-ca.crt
+      dest: /usr/local/share/ca-certificates/registry-ca.crt
+      mode: '644'
+  - name: Update CA certificate trust store
+    ansible.builtin.shell: /usr/sbin/update-ca-certificates
+    args:
+      creates: /etc/ssl/certs/ca-certificates.crt 
+  - name: Restart docker service
+    ansible.builtin.service:
+      name: docker
+      state: restarted 
