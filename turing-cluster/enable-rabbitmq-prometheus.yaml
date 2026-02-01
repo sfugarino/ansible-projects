@@ -1,0 +1,11 @@
+- hosts: control-plane
+  become: yes
+  tasks:
+  - name: Execute a command
+    kubernetes.core.k8s_exec:
+      kubeconfig: /home/ubuntu/.kube/config
+      namespace: rabbitmq
+      pod: rabbitmqcluster-server-0
+      command: rabbitmq-plugins enable rabbitmq_prometheus
+
+
