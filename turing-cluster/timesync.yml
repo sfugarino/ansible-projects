@@ -1,0 +1,26 @@
+---
+- name: Setup timesync daemon
+  hosts: all
+  become: true # Needed to write to /etc
+  tasks:
+    - name: Install systemd-timesyncd
+      ansible.builtin.apt:
+        name: systemd-timesyncd
+        state: present # 'present' ensures the package is installed
+        update_cache: yes # Updates the apt cache if it's too old      ansible.builtin.apt:      
+    - name: Copy and overwrite the /etc/hosts file from a local source
+      ansible.builtin.copy:
+        src: ./timesyncd.conf # Source file on your control node
+        dest: /etc/systemd/timesyncd.conf               # Destination on the remote host
+        owner: root                    # Set ownership
+        group: root                    # Set group
+        mode: '0644'                   # Set permissions (e.g., read/write for owner, read for others)
+        backup: true
+    - name: Set ntp to true
+      ansible.builtin.command: timedatectl set-ntp true
+    - name: Restart time sync service
+      ansible.builtin.command: systemctl restart systemd-timesyncd
+    - name: Set timezone
+      ansible.builtin.command: timedatectl set-timezone America/New_York
+
+

@@ -1,0 +1,41 @@
+# group_vars/all.yml
+# CPU thresholds (percentage)
+health_cpu_warning: 80
+health_cpu_critical: 95
+
+# Memory thresholds (percentage)
+health_memory_warning: 80
+health_memory_critical: 95
+
+# Disk thresholds (percentage used)
+health_disk_warning: 80
+health_disk_critical: 90
+
+# Load average threshold (multiplier of CPU count)
+health_load_warning: 1.5
+health_load_critical: 3.0
+
+# Required services that must be running
+health_required_services:
+  - sshd
+  - rsyslog
+  - cron
+
+# Network endpoints to check from each host
+health_network_checks:
+  - host: 8.8.8.8
+    port: 53
+    name: "DNS (Google)"
+  - host: 10.0.0.1
+    port: 443
+    name: "Internal Gateway"
+
+# Ports that should be listening on each host
+health_required_ports: []
+
+# Slack notification webhook
+health_slack_webhook: "{{ vault_slack_webhook | default('') }}"
+health_slack_channel: "#infra-health"
+
+# Report output directory
+health_report_dir: /tmp/health-reports

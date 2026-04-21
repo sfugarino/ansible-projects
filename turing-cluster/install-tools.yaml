@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: yes  # Required for administrative privileges
+  tasks:
+    - name: Update apt cache and install required packages
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - ripgrep
+        - btop
+        - bat
+        - screenfetch
+        - neofetch

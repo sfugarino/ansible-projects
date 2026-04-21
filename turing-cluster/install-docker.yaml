@@ -1,6 +1,6 @@
 ---
 - name: Install Docker
-  hosts: rockpi
+  hosts: pi
   become: yes
   tasks:
   - name: Update apt cache and install required packages
@@ -18,8 +18,8 @@
     ansible.builtin.file:
       path: /etc/apt/keyrings
       state: directory
-      owner: radxa # Replace with the desired owner
-      group: radxa # Replace with the desired group
+      owner: sam # Replace with the desired owner
+      group: sam # Replace with the desired group
       mode: '0755'
   - name: Ensure a specific file is deleted
     ansible.builtin.file:

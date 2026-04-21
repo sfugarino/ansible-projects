@@ -1,0 +1,28 @@
+# roles/health-check/tasks/memory.yml
+---
+- name: Gather memory facts
+  ansible.builtin.setup:
+    filter: ansible_memory_mb
+
+- name: Calculate memory usage percentage
+  ansible.builtin.set_fact:
+    memory_total: "{{ ansible_memory_mb.real.total }}"
+    memory_used: "{{ ansible_memory_mb.real.total - ansible_memory_mb.real.free - (ansible_memory_mb.nocache.free - ansible_memory_mb.real.free) | abs }}"
+    memory_pct: "{{ ((ansible_memory_mb.real.used / ansible_memory_mb.real.total) * 100) | round(1) }}"
+
+- name: Get swap usage
+  ansible.builtin.shell:
+    cmd: "free -m | awk '/Swap/ {if($2>0) printf \"%.1f\", $3/$2*100; else print \"0\"}'"
+  register: swap_usage_raw
+  changed_when: false
+
+- name: Evaluate memory status
+  ansible.builtin.set_fact:
+    memory_status: >-
+      {% if memory_pct | float > health_memory_critical %}CRITICAL
+      {% elif memory_pct | float > health_memory_warning %}WARNING
+      {% else %}OK{% endif %}
+
+- name: Record memory health result
+  ansible.builtin.set_fact:
+    health_results: "{{ health_results | default([]) + [{'check': 'Memory Usage', 'value': memory_pct ~ '% (' ~ memory_used ~ '/' ~ memory_total ~ ' MB)', 'status': memory_status | trim}, {'check': 'Swap Usage', 'value': swap_usage_raw.stdout ~ '%', 'status': 'OK'}] }}"

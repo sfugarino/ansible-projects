@@ -1,0 +1,17 @@
+# roles/health-check/tasks/services.yml
+---
+- name: Check required services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+  register: service_states
+  loop: "{{ health_required_services }}"
+  ignore_errors: yes
+
+- name: Record service health results
+  ansible.builtin.set_fact:
+    health_results: "{{ health_results | default([]) + [{
+      'check': 'Service ' ~ item.item,
+      'value': item.status.ActiveState | default('unknown'),
+      'status': 'OK' if item.status.ActiveState | default('') == 'active' else 'CRITICAL'
+    }] }}"
+  loop: "{{ service_states.results }}"

@@ -1,0 +1,35 @@
+# roles/health-check/tasks/main.yml
+---
+- name: Initialize health results
+  ansible.builtin.set_fact:
+    health_results: []
+
+- name: Run CPU checks
+  ansible.builtin.include_tasks: cpu.yml
+
+- name: Run memory checks
+  ansible.builtin.include_tasks: memory.yml
+
+- name: Run disk checks
+  ansible.builtin.include_tasks: disk.yml
+
+- name: Run service checks
+  ansible.builtin.include_tasks: services.yml
+
+- name: Run network checks
+  ansible.builtin.include_tasks: network.yml
+
+- name: Display health results
+  ansible.builtin.debug:
+    msg: |
+      === Health Report for {{ inventory_hostname }} ===
+      {% for result in health_results %}
+      [{{ result.status }}] {{ result.check }}: {{ result.value }}
+      {% endfor %}
+
+- name: Set overall host health status
+  ansible.builtin.set_fact:
+    host_health_status: >-
+      {% if health_results | selectattr('status', 'equalto', 'CRITICAL') | list | length > 0 %}CRITICAL
+      {% elif health_results | selectattr('status', 'equalto', 'WARNING') | list | length > 0 %}WARNING
+      {% else %}OK{% endif %}

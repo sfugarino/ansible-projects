@@ -1,0 +1,20 @@
+# roles/health-check/tasks/network.yml
+---
+- name: Check network connectivity to required endpoints
+  ansible.builtin.wait_for:
+    host: "{{ item.host }}"
+    port: "{{ item.port }}"
+    timeout: 5
+    state: started
+  register: network_checks
+  loop: "{{ health_network_checks }}"
+  ignore_errors: yes
+
+- name: Record network health results
+  ansible.builtin.set_fact:
+    health_results: "{{ health_results | default([]) + [{
+      'check': 'Network ' ~ item.item.name,
+      'value': item.item.host ~ ':' ~ item.item.port,
+      'status': 'OK' if not item.failed else 'CRITICAL'
+    }] }}"
+  loop: "{{ network_checks.results }}"

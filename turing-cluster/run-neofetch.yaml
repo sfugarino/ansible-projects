@@ -1,0 +1,8 @@
+---
+- hosts: all
+  become: yes  # Required for administrative privileges
+  tasks:
+    - name: Ensure .bashrc runs neofetch
+      ansible.builtin.lineinfile:
+        path: "~/.bashrc"
+        line: "neofetch"

@@ -1,0 +1,28 @@
+# roles/health-check/tasks/disk.yml
+---
+- name: Get disk usage for all mounted filesystems
+  ansible.builtin.shell:
+    cmd: "df -h --output=target,pcent,size,avail -x tmpfs -x devtmpfs | tail -n +2"
+  register: disk_usage
+  changed_when: false
+
+- name: Parse and evaluate disk usage
+  ansible.builtin.set_fact:
+    disk_results: []
+
+- name: Check each filesystem
+  ansible.builtin.set_fact:
+    disk_results: >-
+      {{ disk_results + [{
+        'check': 'Disk ' ~ item.split()[0],
+        'value': item.split()[1] ~ ' used (' ~ item.split()[3] ~ ' free of ' ~ item.split()[2] ~ ')',
+        'status': 'CRITICAL' if (item.split()[1] | replace('%','') | int) > health_disk_critical
+                  else ('WARNING' if (item.split()[1] | replace('%','') | int) > health_disk_warning
+                  else 'OK')
+      }] }}
+  loop: "{{ disk_usage.stdout_lines }}"
+  when: item | trim | length > 0
+
+- name: Append disk results to health results
+  ansible.builtin.set_fact:
+    health_results: "{{ health_results | default([]) + disk_results }}"

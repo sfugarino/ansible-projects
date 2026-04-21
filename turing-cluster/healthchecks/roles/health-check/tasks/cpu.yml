@@ -1,0 +1,43 @@
+# roles/health-check/tasks/cpu.yml
+---
+- name: Get CPU core count
+  ansible.builtin.command:
+    cmd: nproc
+  register: cpu_cores
+  changed_when: false
+
+- name: Get current CPU usage
+  ansible.builtin.shell:
+    cmd: "top -bn1 | grep 'Cpu(s)' | awk '{print $2}'"
+  register: cpu_usage_raw
+  changed_when: false
+
+- name: Get load average
+  ansible.builtin.command:
+    cmd: "awk '{print $1}' /proc/loadavg"
+  register: load_avg
+  changed_when: false
+
+- name: Set CPU facts
+  ansible.builtin.set_fact:
+    cpu_usage: "{{ cpu_usage_raw.stdout | float }}"
+    cpu_count: "{{ cpu_cores.stdout | int }}"
+    load_average: "{{ load_avg.stdout | float }}"
+
+- name: Evaluate CPU status
+  ansible.builtin.set_fact:
+    cpu_status: >-
+      {% if cpu_usage | float > health_cpu_critical %}CRITICAL
+      {% elif cpu_usage | float > health_cpu_warning %}WARNING
+      {% else %}OK{% endif %}
+
+- name: Evaluate load average status
+  ansible.builtin.set_fact:
+    load_status: >-
+      {% if (load_average | float / cpu_count | int) > health_load_critical %}CRITICAL
+      {% elif (load_average | float / cpu_count | int) > health_load_warning %}WARNING
+      {% else %}OK{% endif %}
+
+- name: Record CPU health result
+  ansible.builtin.set_fact:
+    health_results: "{{ health_results | default([]) + [{'check': 'CPU Usage', 'value': cpu_usage ~ '%', 'status': cpu_status | trim}, {'check': 'Load Average', 'value': load_average ~ ' (' ~ cpu_count ~ ' cores)', 'status': load_status | trim}] }}"
